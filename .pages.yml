@@ -1,0 +1,106 @@
+# Pages CMS 관리자 화면 설정 (https://app.pagescms.org 에서 GitHub로 로그인)
+media: false
+content:
+  - name: posts
+    label: 글
+    type: collection
+    path: _posts
+    format: yaml-frontmatter
+    exclude:
+      - .gitkeep
+    filename: "{year}-{month}-{day}-{fields.slug}.md"
+    view:
+      primary: title
+      sort: date
+      order: desc
+    fields:
+      - name: title
+        label: 제목
+        type: string
+        required: true
+      - name: dek
+        label: 부제
+        type: text
+      - name: published
+        label: 공개 (끄면 사이트에서 내려감)
+        type: boolean
+        default: true
+      - name: categories
+        label: 분류 (리프팅/시술/성분/트렌드)
+        type: string
+        list: true
+      - name: date
+        label: 발행 시각 (예 2026-11-19 09:00:00 +0900)
+        type: string
+      - name: trust_note
+        label: "'얼마나 믿을 만할까' 단락"
+        type: text
+      - name: body
+        label: 본문
+        type: rich-text
+      - name: sources
+        label: 참고한 자료
+        type: object
+        list: true
+        fields:
+          - { name: title, label: 제목, type: string }
+          - { name: url, label: 주소, type: string }
+          - { name: type, label: 종류, type: string }
+          - { name: publisher, label: 발행처, type: string }
+          - { name: accessed, label: 확인일, type: string }
+      # --- 아래는 자동 파이프라인의 검증 기록입니다. 화면에 나오지 않고 수정할 수 없습니다. ---
+      - name: layout
+        type: string
+        hidden: true
+        default: post
+      - name: evidence_level
+        label: 근거 수준(기록)
+        type: string
+        readonly: true
+      - name: evidence_summary
+        label: 근거 요약(기록)
+        type: text
+        readonly: true
+      - name: claims
+        label: 주장별 근거(기록)
+        type: object
+        list: true
+        readonly: true
+        fields:
+          - { name: text, type: text }
+          - { name: evidence, type: string }
+          - { name: verdict, type: string }
+      - name: verification
+        label: 검증 기록
+        type: object
+        readonly: true
+        fields:
+          - { name: method, type: text }
+          - name: verifiers
+            type: object
+            list: true
+            fields:
+              - { name: name, type: string }
+              - { name: perspective, type: string }
+              - { name: verdict, type: string }
+              - { name: notes, type: text }
+          - { name: status, type: string }
+          - { name: checked_at, type: string }
+      - name: compliance
+        label: 의료광고 점검 기록
+        type: object
+        readonly: true
+        fields:
+          - { name: status, type: string }
+          - { name: checked_at, type: string }
+
+  - name: policy
+    label: 편집·검증 원칙 페이지
+    type: file
+    path: policy.md
+    format: yaml-frontmatter
+    fields:
+      - { name: layout, type: string, hidden: true, default: default }
+      - { name: title, label: 제목, type: string }
+      - { name: permalink, type: string, hidden: true, default: /policy/ }
+      - { name: body, label: 본문, type: rich-text }

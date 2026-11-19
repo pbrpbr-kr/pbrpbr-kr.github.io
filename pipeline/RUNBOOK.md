@@ -13,6 +13,7 @@
 4. **독립성**: 검증자 세 명에게는 주장 목록만 넘깁니다. 초안 본문, 수집 출처, 다른 검증자의 결과는 넘기지 않습니다.
 
 ## 1. 주제 후보 수집
+0. 먼저 관리자 화면에서 바뀐 글을 받아 옵니다: `bash -c '. pipeline/bin/git_env.sh && git pull -q --rebase --autostash origin main'`
 1. 최근 60일 동안 다룬 주제를 확인합니다: `ls _posts pipeline/review_queue` 그리고 `pipeline/topics_history.txt`가 있으면 읽습니다. 같은 주제는 다시 고르지 않습니다.
 2. WebSearch로 최근 2~4주의 화제 신호를 찾습니다. 한국어 검색과 영어 검색을 섞고, 최소 6번 검색합니다. 예:
    - "리프팅 시술 트렌드 {이번 달}", "피부과 시술 인기 2026", "올리브영 랭킹 성분", "인스타그램 화제 스킨케어 성분", "쓰레드 피부 시술 화제", "K-beauty trending ingredient", "aesthetic procedure trend 2026", "skin booster trend"
