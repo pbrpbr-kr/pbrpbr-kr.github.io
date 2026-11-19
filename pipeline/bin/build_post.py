@@ -100,8 +100,10 @@ def check_schema(meta, body):
             errs.append(f"필드 누락: {k}")
     if errs:
         return errs
-    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", meta["slug"]):
-        errs.append("slug는 영문 소문자·숫자·하이픈만")
+    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+){0,2}", meta["slug"]) or len(meta["slug"]) > 24:
+        errs.append("slug는 영문 소문자 1~3단어, 24자 이내(예: pdrn, exosome, skin-booster) — 글 주소가 됨")
+    elif list((ROOT / "_posts").glob(f"*-{meta['slug']}.md")):
+        errs.append(f"slug '{meta['slug']}'가 이미 쓰임 → 주제를 구분하는 단어를 붙이세요(예: {meta['slug']}-vegan)")
     if meta["evidence_level"] not in EVIDENCE_LEVELS:
         errs.append(f"evidence_level은 {sorted(EVIDENCE_LEVELS)} 중 하나")
     if len(meta["sources"]) < 3:

@@ -4,8 +4,8 @@ lang: ko
 timezone: Asia/Seoul
 # GitHub Pages 저장소 이름에 맞춰 setup 때 자동 수정됩니다.
 url: "https://voddlqhdl9-sudo.github.io"
-baseurl: "/skin_blog"
-permalink: /:year/:month/:day/:title/
+baseurl: ""
+permalink: /:title/
 markdown: kramdown
 future: false
 plugins:

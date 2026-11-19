@@ -96,7 +96,7 @@ python3 collect_optional.py "<한국어 키워드1>" "<한국어 키워드2>" > 
 post.json:
 ```json
 {
-  "title": "...", "slug": "english-lowercase-slug",
+  "title": "...", "slug": "짧은-영문(1~3단어, 글 주소가 됨: 예 pdrn, exosome, skin-booster)",
   "dek": "부제 한 문장",
   "categories": ["리프팅|시술|성분|트렌드 중 1~2개"],
   "evidence_level": "objective | mixed | cross_verified_sns",
@@ -127,7 +127,7 @@ python3 pipeline/bin/build_post.py pipeline/work/$RUN
 - `"outcome":"invalid"` (exit 1): 입력을 고쳐 다시 실행합니다.
 - `compliance_warnings`는 발행을 막지 않지만 실행 로그에 적습니다.
 
-발행했다면 `pipeline/topics_history.txt`에 `날짜<TAB>주제<TAB>slug` 한 줄을 추가합니다. 1~3분 뒤 `curl -s -o /dev/null -w '%{http_code}'`로 글 URL(`_config.yml`의 url+baseurl+/YYYY/MM/DD/slug/)이 200인지 확인합니다. 아직 404면 2분 뒤 한 번 더 확인합니다.
+발행했다면 `pipeline/topics_history.txt`에 `날짜<TAB>주제<TAB>slug` 한 줄을 추가합니다. 1~3분 뒤 `curl -s -o /dev/null -w '%{http_code}'`로 글 URL(`https://voddlqhdl9-sudo.github.io/<slug>/`)이 200인지 확인합니다. 아직 404면 2분 뒤 한 번 더 확인합니다.
 
 ## 8. 마무리 보고
 실행 로그를 완성하고, 마지막 메시지에 다음을 적습니다: 고른 주제, 근거 수준, 검증자별 판정, 결과(발행 URL / 검토 대기 경로 / 발행할 주제 없음), 건너뛴 수집 소스와 그 이유.
