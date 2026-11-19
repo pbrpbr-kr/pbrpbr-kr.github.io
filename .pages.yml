@@ -47,7 +47,7 @@ content:
           - { name: type, label: 종류, type: string }
           - { name: publisher, label: 발행처, type: string }
           - { name: accessed, label: 확인일, type: string }
-      # --- 아래는 자동 파이프라인의 검증 기록입니다. 화면에 나오지 않고 수정할 수 없습니다. ---
+      # --- 아래는 자동 파이프라인의 검증 기록입니다(수정 가능, 사이트 화면에는 나오지 않음) ---
       - name: layout
         type: string
         hidden: true
@@ -55,16 +55,13 @@ content:
       - name: evidence_level
         label: 근거 수준(기록)
         type: string
-        readonly: true
       - name: evidence_summary
         label: 근거 요약(기록)
         type: text
-        readonly: true
       - name: claims
         label: 주장별 근거(기록)
         type: object
         list: true
-        readonly: true
         fields:
           - { name: text, type: text }
           - { name: evidence, type: string }
@@ -72,7 +69,6 @@ content:
       - name: verification
         label: 검증 기록
         type: object
-        readonly: true
         fields:
           - { name: method, type: text }
           - name: verifiers
@@ -88,7 +84,6 @@ content:
       - name: compliance
         label: 의료광고 점검 기록
         type: object
-        readonly: true
         fields:
           - { name: status, type: string }
           - { name: checked_at, type: string }
