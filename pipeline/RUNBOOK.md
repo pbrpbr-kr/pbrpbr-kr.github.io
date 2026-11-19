@@ -154,9 +154,21 @@ cd /Users/sungminjang/클로드/skin-blog
 python3 pipeline/bin/build_post.py pipeline/work/$RUN
 ```
 - `"outcome":"ready"` (exit 0): 발행 정책이 **검증 통과 시 자동 발행**이므로 바로 `bash pipeline/bin/publish.sh "새 글: <제목>"`을 실행합니다.
-- `"outcome":"review"` (exit 2): 금지 표현이나 검증 규칙에 걸린 경우입니다. 걸린 표현이 단순한 문구 문제라면 본문을 고쳐 **한 번만** 다시 빌드합니다(검증 결과를 바꾸려고 주장을 고치지 않습니다). 그래도 걸리면 review_queue에 둔 채 발행하지 않습니다.
+- `"outcome":"review"` (exit 2): 발행이 보류된 것입니다. **그대로 두지 말고 아래 '7-1. 보류 글 검수·재발행'을 반드시 진행합니다.**
 - `"outcome":"invalid"` (exit 1): 입력을 고쳐 다시 실행합니다.
 - `compliance_warnings`는 발행을 막지 않지만 실행 로그에 적습니다.
+
+### 7-1. 보류 글 검수·재발행 (발행인의 상시 지시: 보류되면 검수하고 다시 발행)
+1. `pipeline/review_queue/<이름>/REVIEW.json`을 읽고, 걸린 항목마다 원인을 찾습니다.
+   - `compliance_blocks`: `pipeline/bin/build_post.py`의 BLOCK 규칙(정규식)으로 work 디렉터리의 `body.md`와 `post.json`을 grep해 **어느 문장의 어느 글자에 걸렸는지** 찾습니다.
+     - 무해한 단어 속에 걸린 오탐이면(예: '장기적으로' 속 '기적') 그 문장을 같은 뜻의 다른 표현으로 바꿉니다. 오탐 내용은 보고에 적습니다. 규칙 파일은 자동 실행 중에 고치지 않습니다.
+     - 진짜 금지 표현이면 효과 보장·과장·홍보가 없는 표현으로 다시 씁니다. 해당 문장을 지워도 됩니다.
+   - `verification_errors`: 검증 규칙을 통과하지 못한 주장은 **본문과 claims에서 빼거나**, 지지된 범위까지만 말하도록 낮춥니다. 검증자 판정이나 verification 기록은 절대 바꾸지 않습니다. 주장을 바꿨다면 evidence_level·trust_note도 그에 맞게 고칩니다.
+   - 이미지 문제면 `gen_images.sh`를 다시 실행하거나 문제 이미지를 뺍니다(hero는 필수).
+2. 고친 문장들을 다시 읽어 6단계 '지켜야 할 것'과 매거진 문체에 맞는지 스스로 검수합니다.
+3. `python3 pipeline/bin/build_post.py pipeline/work/$RUN`을 다시 실행합니다(work 디렉터리 기준으로 다시 빌드하면 됩니다). 이 과정을 **최대 3번**까지 반복합니다.
+4. ready가 나오면 `rm -rf pipeline/review_queue/<이름>`으로 보류본을 지우고 평소처럼 publish.sh로 발행합니다.
+5. 3번 해도 통과하지 못하면 review_queue에 둔 채 발행하지 않고, 남은 문제를 보고에 적습니다. 검사 규칙을 끄거나 우회해서 발행하지 않습니다.
 
 발행했다면 `pipeline/topics_history.txt`에 `날짜<TAB>주제<TAB>slug` 한 줄을 추가합니다. 1~3분 뒤 `curl -s -o /dev/null -w '%{http_code}'`로 글 URL(`https://pbrpbr-kr.github.io/<slug>/`)이 200인지 확인합니다. 아직 404면 2분 뒤 한 번 더 확인합니다.
 

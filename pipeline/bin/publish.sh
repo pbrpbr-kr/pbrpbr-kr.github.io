@@ -8,6 +8,7 @@ cd "$ROOT"
 git pull -q --rebase --autostash origin main
 git add _posts
 [ -d assets/img/posts ] && git add assets/img/posts
+git add pipeline/topics_history.txt 2>/dev/null || true
 if git diff --cached --quiet; then echo "NOTHING_TO_PUBLISH"; exit 0; fi
 git commit -q -m "${1:-새 글 발행}"
 git push -q origin main
