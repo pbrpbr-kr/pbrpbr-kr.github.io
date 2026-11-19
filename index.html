@@ -1,0 +1,26 @@
+---
+layout: default
+---
+<section class="hero">
+  <h1>{{ site.title }}</h1>
+  <p>{{ site.description }}</p>
+  <p class="legend">
+    <span class="badge evidence-objective">객관 데이터</span>
+    <span class="badge evidence-mixed">객관 + 교차검증 SNS</span>
+    <span class="badge evidence-cross_verified_sns">교차검증 SNS 신호</span>
+  </p>
+</section>
+<ul class="post-list">
+  {% for post in site.posts %}
+  <li>
+    <a href="{{ post.url | relative_url }}"><h2>{{ post.title }}</h2></a>
+    <p class="meta">{{ post.date | date: "%Y.%m.%d" }}
+      {% for c in post.categories %}<span class="tag">{{ c }}</span>{% endfor %}
+      <span class="badge evidence-{{ post.evidence_level }}">{% if post.evidence_level == "objective" %}객관 데이터{% elsif post.evidence_level == "mixed" %}객관 + 교차검증 SNS{% else %}교차검증 SNS 신호{% endif %}</span>
+    </p>
+    <p>{{ post.excerpt | strip_html | truncate: 140 }}</p>
+  </li>
+  {% else %}
+  <li class="muted">아직 발행된 글이 없습니다.</li>
+  {% endfor %}
+</ul>

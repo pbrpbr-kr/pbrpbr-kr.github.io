@@ -1,0 +1,109 @@
+# 피부미용 트렌드 블로그 — 1회 실행 절차
+
+예약 작업이 실행될 때마다 이 절차를 처음부터 끝까지 따릅니다. 사람의 입력 없이 끝까지 진행하고, 막히면 그 단계를 실패로 기록하고 멈춥니다.
+
+- 프로젝트 루트: `/Users/sungminjang/클로드/skin-blog` (아래 경로는 모두 여기 기준)
+- 실행 ID: `RUN=$(date +%Y%m%d-%H%M)`, 작업 폴더: `pipeline/work/$RUN/`
+- 실행 로그: `pipeline/runs/$RUN.md`에 단계별 결과를 계속 덧붙입니다.
+
+## 지켜야 할 원칙 (모든 단계에 적용)
+1. **수집 방법**: 인스타그램·X·쓰레드·유튜브 화제성은 ① `.env`에 키가 있는 공식 API(`collect_optional.py`) ② 공개된 기사·리포트·트렌드 정리 글(WebSearch/WebFetch)로만 확인합니다. 플랫폼 페이지를 직접 긁지 않습니다. 로그인이 필요한 페이지는 열지 않습니다.
+2. **의료광고 규제(의료법 제56조)**: 효과 보장·단정, 부작용 부정, 전후 비교, 체험 후기, 특정 병원·의사·가격·할인·예약 유도를 쓰지 않습니다. 제품·장비명은 업계 동향을 설명하는 데에만 쓰고, 권유하지 않습니다.
+3. **자격증명**: `.env`를 읽기만 하고 수정하거나 출력하지 않습니다. 없는 키는 건너뜁니다.
+4. **독립성**: 검증자 세 명에게는 주장 목록만 넘깁니다. 초안 본문, 수집 출처, 다른 검증자의 결과는 넘기지 않습니다.
+
+## 1. 주제 후보 수집
+1. 최근 60일 동안 다룬 주제를 확인합니다: `ls _posts pipeline/review_queue` 그리고 `pipeline/topics_history.txt`가 있으면 읽습니다. 같은 주제는 다시 고르지 않습니다.
+2. WebSearch로 최근 2~4주의 화제 신호를 찾습니다. 한국어 검색과 영어 검색을 섞고, 최소 6번 검색합니다. 예:
+   - "리프팅 시술 트렌드 {이번 달}", "피부과 시술 인기 2026", "올리브영 랭킹 성분", "인스타그램 화제 스킨케어 성분", "쓰레드 피부 시술 화제", "K-beauty trending ingredient", "aesthetic procedure trend 2026", "skin booster trend"
+   - 범주: 리프팅(장비·실), 주사·시술(스킨부스터, 필러, 보톡스 계열), 재료·성분(PDRN, 엑소좀, 펩타이드, 레티날 등), 홈케어·뷰티 디바이스, 트렌드.
+3. 후보 3~5개를 고르고, 각 후보마다 화제 신호의 근거 URL을 기록합니다.
+
+## 2. 객관 데이터 수집
+후보마다 영어 PubMed 검색어를 정하고, 수집기에는 한국어 키워드를 넘깁니다.
+```bash
+cd /Users/sungminjang/클로드/skin-blog/pipeline/bin
+python3 collect_pubmed.py "<영어 검색어1>" "<영어 검색어2>" > ../work/$RUN/pubmed.json
+python3 collect_optional.py "<한국어 키워드1>" "<한국어 키워드2>" > ../work/$RUN/optional.json
+```
+그 밖에 WebSearch로 판매량(올리브영·쿠팡 랭킹 기사, 기업 실적·IR), 시술 건수와 시장 규모(공공 통계, 업계 리포트), 허가 현황(식약처·FDA)을 찾습니다.
+
+## 3. 주제 선정
+아래 순서로 점수를 매겨 하나를 고릅니다: 화제성 강도 > 객관 데이터 확보 가능성 > 독자 유용성 > 규제 위험(낮을수록 좋음).
+특정 병원의 이벤트나 단일 제품 광고에 가까운 주제는 버립니다.
+고른 주제와 이유를 실행 로그에 적습니다.
+
+## 4. 주장 정리
+글의 핵심 주장을 4~8개로 정리해 `work/$RUN/claims_all.json`에 저장합니다.
+```json
+[{"id":1,"text":"...","evidence":"objective","source_ids":[1,3]},
+ {"id":2,"text":"...","evidence":"sns","source_ids":[4]}]
+```
+- `objective`: 논문 수, 검색량, 판매 순위·실적, 시술·시장 통계, 허가 정보 같은 객관 출처로 직접 뒷받침되는 주장
+- `sns`: 객관 지표가 없고 SNS·인플루언서 화제성이나 보도에만 기대는 주장
+- 출처 목록 `sources`도 이때 만듭니다. `type`은 paper / search_trend / sales / procedure_stats / regulatory / market_report / news / sns / influencer / industry / other 중 하나입니다.
+
+## 5. 독립 교차검증 (sns 주장이 하나라도 있으면 반드시 실행)
+`work/$RUN/claims_sns.json`에 sns 주장만 `[{"id":..,"text":..}]` 형식으로 저장합니다. 그다음 **세 검증자를 동시에** 실행합니다.
+
+| 검증자 | 실행 방법 | 관점 |
+|---|---|---|
+| sources | Agent 도구, `subagent_type: "skin-verifier-sources"` | 독립 출처(언론·업계·공공기관) |
+| skeptic | Agent 도구, `subagent_type: "skin-verifier-skeptic"` | 의학 근거·안전성·과장 |
+| codex | Bash: `pipeline/bin/codex_verify.sh work/$RUN/claims_sns.json work/$RUN/verify_codex.json` (timeout 600000) | 다른 회사의 모델(OpenAI)이 처음부터 따로 확인 |
+
+- 에이전트 프롬프트에는 claims 파일 경로, 결과 파일 경로(`work/$RUN/verify_sources.json`, `verify_skeptic.json`), 그리고 sources 검증자에게는 제외 도메인(수집 때 쓴 출처 도메인)만 줍니다.
+- 그 subagent_type을 찾을 수 없으면 `/Users/sungminjang/클로드/skin-blog/.claude/agents/<이름>.md`를 읽어 그 내용을 프롬프트로 general-purpose 에이전트를 실행합니다.
+- codex가 실패하면(`CODEX_PARSE_FAILED`, 로그인 오류 등) 한 번만 다시 시도합니다. 그래도 실패하면 codex 판정을 `unverifiable`로 기록합니다. 이 경우 나머지 두 검증자가 모두 `supported`여야 통과합니다.
+
+결과 정리:
+- 주장마다 `verdicts: {"sources": .., "skeptic": .., "codex": ..}`를 붙입니다.
+- `contradicted`가 하나라도 있는 주장, 또는 `supported`가 2개 미만인 주장은 **글에서 뺍니다**. 빼고 나서 남은 주장으로 글이 성립하지 않으면 다른 후보로 돌아가 3단계부터 다시 합니다(최대 1회). 그래도 안 되면 "발행할 주제 없음"으로 끝냅니다.
+- 검증자가 찾은 새 출처 가운데 글에 쓰는 것은 `sources`에 추가합니다.
+
+## 6. 글 작성
+`work/$RUN/body.md`(Markdown 본문)와 `work/$RUN/post.json`(메타데이터)을 씁니다.
+
+본문 규칙:
+- 한국어, 1,500~3,000자, 소제목 3~5개
+- 구성: 왜 화제인가(화제 신호) → 데이터로 본 실제 모습(객관 지표, 수치와 출처 번호 [1]) → 알려진 근거와 한계(연구 수준, 안전성) → 정리
+- 모든 수치와 주장 뒤에 출처 번호 `[n]`을 붙입니다(post.json의 sources 순서).
+- SNS에만 근거한 내용은 "SNS에서 ~라는 이야기가 많다"처럼 화제성으로만 쓰고, 효능 사실처럼 쓰지 않습니다.
+- 이미지, 전후 비교, 후기 인용, 병원·의사 이름, 가격, 예약 유도는 넣지 않습니다. 면책 문구는 레이아웃이 자동으로 붙입니다.
+
+post.json:
+```json
+{
+  "title": "...", "slug": "english-lowercase-slug",
+  "categories": ["리프팅|시술|성분|트렌드 중 1~2개"],
+  "evidence_level": "objective | mixed | cross_verified_sns",
+  "evidence_summary": "근거 수준을 한두 문장으로",
+  "claims": [{"text":"...","evidence":"objective","source_ids":[1]},
+             {"text":"...","evidence":"sns","source_ids":[4],"verdicts":{"sources":"supported","skeptic":"supported","codex":"partial"}}],
+  "sources": [{"title":"...","url":"https://...","type":"paper","publisher":"...","accessed":"YYYY-MM-DD"}],
+  "verification": {
+    "method": "객관 지표가 없는 주장 N개를 독립 검증자 3명이 서로의 결과를 보지 않고 따로 확인함 (2명 이상 지지, 반박 0건이면 통과)",
+    "verifiers": [
+      {"name":"sources","perspective":"독립 출처(언론·업계·공공기관) 교차확인","verdict":"supported","notes":"요지 한 문장"},
+      {"name":"skeptic","perspective":"의학 근거·안전성·과장 여부(논문·규제기관)","verdict":"partial","notes":"..."},
+      {"name":"codex","perspective":"외부 모델(OpenAI Codex) 독립 웹 검색 확인","verdict":"supported","notes":"..."}
+    ]
+  }
+}
+```
+(모든 주장이 objective라면 verifiers는 비워 두고, method에 "객관 데이터로 직접 확인"이라고 씁니다.) 검증자별 `verdict`는 그 검증자의 전체 판정입니다(대부분이 supported면 supported).
+
+## 7. 빌드·점검·발행
+```bash
+cd /Users/sungminjang/클로드/skin-blog
+python3 pipeline/bin/build_post.py pipeline/work/$RUN
+```
+- `"outcome":"ready"` (exit 0): 발행 정책이 **검증 통과 시 자동 발행**이므로 바로 `bash pipeline/bin/publish.sh "새 글: <제목>"`을 실행합니다.
+- `"outcome":"review"` (exit 2): 금지 표현이나 검증 규칙에 걸린 경우입니다. 걸린 표현이 단순한 문구 문제라면 본문을 고쳐 **한 번만** 다시 빌드합니다(검증 결과를 바꾸려고 주장을 고치지 않습니다). 그래도 걸리면 review_queue에 둔 채 발행하지 않습니다.
+- `"outcome":"invalid"` (exit 1): 입력을 고쳐 다시 실행합니다.
+- `compliance_warnings`는 발행을 막지 않지만 실행 로그에 적습니다.
+
+발행했다면 `pipeline/topics_history.txt`에 `날짜<TAB>주제<TAB>slug` 한 줄을 추가합니다. 1~3분 뒤 `curl -s -o /dev/null -w '%{http_code}'`로 글 URL(`_config.yml`의 url+baseurl+/YYYY/MM/DD/slug/)이 200인지 확인합니다. 아직 404면 2분 뒤 한 번 더 확인합니다.
+
+## 8. 마무리 보고
+실행 로그를 완성하고, 마지막 메시지에 다음을 적습니다: 고른 주제, 근거 수준, 검증자별 판정, 결과(발행 URL / 검토 대기 경로 / 발행할 주제 없음), 건너뛴 수집 소스와 그 이유.

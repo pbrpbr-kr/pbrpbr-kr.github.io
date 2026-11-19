@@ -1,0 +1,61 @@
+---
+layout: default
+---
+{% assign lv = page.evidence_level %}
+<article class="post">
+  <p class="meta">
+    {{ page.date | date: "%Y년 %-m월 %-d일" }}
+    {% for c in page.categories %}<span class="tag">{{ c }}</span>{% endfor %}
+  </p>
+  <h1>{{ page.title }}</h1>
+
+  <div class="evidence evidence-{{ lv }}">
+    <span class="badge">
+      {% if lv == "objective" %}근거 수준: 객관 데이터
+      {% elsif lv == "mixed" %}근거 수준: 객관 데이터 + 교차검증된 SNS 신호
+      {% else %}근거 수준: 교차검증된 SNS 신호 (객관 지표 없음){% endif %}
+    </span>
+    <p>{{ page.evidence_summary }}</p>
+  </div>
+
+  {% include disclaimer.html %}
+
+  <div class="content">{{ content }}</div>
+
+  <section class="verification">
+    <h2>검증 결과</h2>
+    <p>
+      상태: <strong>{% if page.verification.status == "passed" %}통과{% else %}{{ page.verification.status }}{% endif %}</strong>
+      · 확인 시각: {{ page.verification.checked_at }}
+    </p>
+    <p class="muted">{{ page.verification.method }}</p>
+    {% if page.verification.verifiers %}
+    <table>
+      <thead><tr><th>검증자</th><th>관점·출처</th><th>판정</th><th>요지</th></tr></thead>
+      <tbody>
+      {% for v in page.verification.verifiers %}
+        <tr><td>{{ v.name }}</td><td>{{ v.perspective }}</td><td>{{ v.verdict }}</td><td>{{ v.notes }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+    {% if page.claims %}
+    <h3>주장별 근거</h3>
+    <ul class="claims">
+      {% for cl in page.claims %}
+      <li><span class="tag">{% if cl.evidence == "objective" %}객관 데이터{% else %}교차검증 SNS{% endif %}</span> {{ cl.text }} <span class="muted">— {{ cl.verdict }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <p class="muted">의료광고 표현 점검: {{ page.compliance.status }} ({{ page.compliance.checked_at }})</p>
+  </section>
+
+  <section class="sources">
+    <h2>출처</h2>
+    <ol>
+      {% for s in page.sources %}
+      <li><span class="tag">{{ s.type }}</span> <a href="{{ s.url }}" rel="nofollow noopener" target="_blank">{{ s.title }}</a>{% if s.publisher %} · {{ s.publisher }}{% endif %} <span class="muted">(확인 {{ s.accessed }})</span></li>
+      {% endfor %}
+    </ol>
+  </section>
+</article>

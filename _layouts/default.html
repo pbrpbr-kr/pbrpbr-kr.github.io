@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% seo %}
+  {% feed_meta %}
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+      <nav>
+        <a href="{{ '/' | relative_url }}">글 목록</a>
+        <a href="{{ '/policy/' | relative_url }}">편집·검증 원칙</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    {{ content }}
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      {% include disclaimer.html %}
+      <p class="muted">이 블로그는 특정 의료기관·제품을 홍보하지 않으며 광고비를 받지 않습니다. 글은 자동화된 조사 파이프라인이 작성하고, 출처·근거 수준·교차검증 결과를 함께 공개합니다.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,8 @@
+.env
+pipeline/bin/.askpass.sh
+pipeline/work/
+pipeline/review_queue/
+pipeline/runs/
+__pycache__/
+.DS_Store
+_site/
