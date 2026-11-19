@@ -15,7 +15,7 @@ PROMPT="당신은 피부미용 분야 팩트체커입니다. 아래 파일 $(bas
 - 출력은 JSON 배열 하나만, 다른 텍스트 없이:
 [{\"id\":1,\"verdict\":\"supported\",\"reason\":\"한국어 한두 문장\",\"sources\":[{\"title\":\"...\",\"url\":\"https://...\"}]}]"
 "$CODEX" exec -s read-only --skip-git-repo-check --color never -c web_search='"live"' \
-  -C "$DIR" -o "$OUT.raw" "$PROMPT" > "$OUT.log" 2>&1
+  -C "$DIR" -o "$OUT.raw" "$PROMPT" < /dev/null > "$OUT.log" 2>&1
 code=$?
 # 응답에서 JSON 배열만 추출
 /usr/bin/python3 - "$OUT.raw" "$OUT" <<'PY'

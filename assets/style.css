@@ -66,3 +66,17 @@ th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: lef
 details.sources { margin-top: 28px; border-top: 0; font-size: 14px; color: var(--muted); }
 details.sources summary { cursor: pointer; }
 .post .disclaimer { margin-top: 24px; font-size: 13px; }
+
+/* images */
+.hero-img { margin: 0 0 32px; }
+.hero-img img, .post .content img { width: 100%; height: auto; display: block; border-radius: 12px; }
+.hero-img figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.post .content p:has(> img) { margin: 2em 0; }
+.post .content p:has(> img) em { display: block; font-style: normal; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.post-list li.has-thumb { display: grid; grid-template-columns: 1fr 180px; gap: 20px; align-items: center; }
+.post-list li.has-thumb .thumb { order: 2; }
+.post-list .thumb img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 10px; display: block; }
+@media (max-width: 560px) {
+  .post-list li.has-thumb { grid-template-columns: 1fr; }
+  .post-list li.has-thumb .thumb { order: 0; }
+}

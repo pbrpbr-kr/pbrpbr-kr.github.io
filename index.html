@@ -7,10 +7,13 @@ layout: default
 </section>
 <ul class="post-list">
   {% for post in site.posts %}
-  <li>
+  <li{% if post.image %} class="has-thumb"{% endif %}>
+    {% if post.image %}<a class="thumb" href="{{ post.url | relative_url }}"><img src="{{ post.image | relative_url }}" alt="" loading="lazy"></a>{% endif %}
+    <div>
     <p class="meta">{% for c in post.categories %}<span class="kicker">{{ c }}</span>{% endfor %}<span>{{ post.date | date: "%Y.%m.%d" }}</span></p>
     <a href="{{ post.url | relative_url }}"><h2>{{ post.title }}</h2></a>
     <p class="dek-small">{% if post.dek %}{{ post.dek }}{% else %}{{ post.excerpt | strip_html | truncate: 120 }}{% endif %}</p>
+    </div>
   </li>
   {% else %}
   <li class="muted">아직 발행된 글이 없습니다.</li>

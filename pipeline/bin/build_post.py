@@ -47,8 +47,17 @@ BLOCK = [
     (r"(할인|이벤트\s*가|특가|\d[\d,]*\s*만?\s*원(부터|대|에))", "가격·할인 정보"),
     (r"(예약|상담)\s*(문의|하세요|바로가기)", "유인·알선 표현"),
     (r"(010|02|031)-?\d{3,4}-?\d{4}", "연락처"),
-    (r"!\[", "이미지(전후 사진 방지를 위해 본문 이미지 금지)"),
+    (r"!\[|<img", "본문에 직접 넣은 이미지(이미지는 [[img:id]] 자리표시자와 images.json으로만)"),
 ]
+# 이미지 생성 프롬프트·대체텍스트·캡션 전용 금지 요소 (프롬프트에는 화면에 '있는 것'만 쓴다)
+IMAGE_BLOCK = [
+    (r"\b(before|after|split[- ]screen|comparison|side[- ]by[- ]side)\b|전후|비교", "전후·비교 이미지"),
+    (r"\b(face|faces|portrait|person|people|woman|women|man|men|girl|boy|model|patient|selfie)\b|얼굴|인물|환자|모델", "사람·얼굴"),
+    (r"\b(clinic|hospital|doctor|dermatologist|nurse|treatment room)\b|병원|클리닉|의사|시술실", "의료기관·의료진"),
+    (r"\b(logo|brand|label text|packaging|typography|text)\b|로고|브랜드|문구", "글자·로고·브랜드"),
+    (r"\b(injecting|being injected|needle in skin)\b", "시술 장면"),
+]
+
 WARN = [
     (r"후기", "체험 후기 성격 표현 — 인용이면 SNS 동향 맥락인지 확인"),
     (r"(효과\s*(가|는)?\s*(뛰어|탁월|확실))", "효과 강조"),
@@ -173,6 +182,57 @@ def check_verification(meta):
     return errs
 
 
+def load_images(work):
+    f = work / "images.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else []
+
+
+def check_images(meta, body, images):
+    errs = []
+    ids = [im.get("id") for im in images]
+    if "hero" not in ids:
+        errs.append("대표 이미지(id: hero)가 없음")
+    if not (2 <= len(images) <= 4):
+        errs.append("이미지는 대표 이미지 포함 2~4장")
+    used = set(re.findall(r"\[\[img:([a-z0-9-]+)\]\]", body))
+    for im in images:
+        i = im.get("id", "")
+        if not re.fullmatch(r"[a-z0-9-]+", i):
+            errs.append(f"이미지 id 형식 오류: {i}")
+            continue
+        if len(im.get("alt", "")) < 8 or not im.get("caption"):
+            errs.append(f"이미지 {i}: alt(8자 이상)와 caption 필요")
+        if not (ROOT / "assets" / "img" / "posts" / meta["slug"] / f"{i}.jpg").exists():
+            errs.append(f"이미지 파일 없음: assets/img/posts/{meta['slug']}/{i}.jpg (gen_images.sh 먼저)")
+        if i != "hero" and i not in used:
+            errs.append(f"이미지 {i}가 본문에서 쓰이지 않음([[img:{i}]] 필요)")
+    for u in used - set(ids):
+        errs.append(f"본문의 [[img:{u}]]에 해당하는 이미지가 없음")
+    if "hero" in used:
+        errs.append("hero는 제목 아래에 자동으로 들어가므로 본문에 넣지 않음")
+    return errs
+
+
+def check_image_compliance(images):
+    out = []
+    for im in images:
+        text = " ".join([im.get("prompt", ""), im.get("alt", ""), im.get("caption", "")])
+        for pat, why in IMAGE_BLOCK:
+            for m in re.finditer(pat, text, flags=re.I):
+                out.append(f"이미지 {im.get('id')} — {why}: “{m.group(0)}”")
+    return out
+
+
+def render_images(body, images, slug):
+    by = {im["id"]: im for im in images}
+    def rep(m):
+        im = by.get(m.group(1))
+        if not im:
+            return m.group(0)
+        return f"![{im['alt']}](/assets/img/posts/{slug}/{im['id']}.jpg)\n*{im['caption']} · AI 생성 이미지*"
+    return re.sub(r"\[\[img:([a-z0-9-]+)\]\]", rep, body)
+
+
 def check_compliance(meta, body):
     text = "\n".join([meta["title"], meta["dek"], meta["trust_note"], meta["evidence_summary"], body] + [c.get("text", "") for c in meta["claims"]])
     blocks, warns = [], []
@@ -197,8 +257,16 @@ def main(work, dry=False):
         result.update(outcome="invalid", errors=schema)
         print(json.dumps(result, ensure_ascii=False))
         return 1
+    images = load_images(work)
+    ierr = check_images(meta, body, images)
+    if ierr:
+        result.update(outcome="invalid", errors=ierr)
+        print(json.dumps(result, ensure_ascii=False))
+        return 1
     verr = check_verification(meta)
     blocks, warns = check_compliance(meta, body)
+    blocks += check_image_compliance(images)
+    blocks += [b for b in check_compliance(meta, " ".join(im.get("alt", "") + " " + im.get("caption", "") for im in images))[0] if b not in blocks]
 
     meta["verification"]["status"] = "passed" if not verr else "failed"
     meta["verification"]["checked_at"] = now.strftime("%Y-%m-%d %H:%M KST")
@@ -211,6 +279,9 @@ def main(work, dry=False):
         "layout": "post",
         "title": meta["title"],
         "dek": meta["dek"],
+        "image": f"/assets/img/posts/{meta['slug']}/hero.jpg",
+        "image_alt": next(im["alt"] for im in images if im["id"] == "hero"),
+        "image_caption": next(im["caption"] for im in images if im["id"] == "hero") + " · AI 생성 이미지",
         "date": now.strftime("%Y-%m-%d %H:%M:%S +0900"),
         "categories": meta["categories"],
         "evidence_level": meta["evidence_level"],
@@ -221,7 +292,7 @@ def main(work, dry=False):
         "compliance": meta["compliance"],
         "sources": meta["sources"],
     }
-    doc = "---\n" + to_yaml(fm) + "\n---\n\n" + body.strip() + "\n"
+    doc = "---\n" + to_yaml(fm) + "\n---\n\n" + render_images(body.strip(), images, meta["slug"]) + "\n"
     name = f"{now:%Y-%m-%d}-{meta['slug']}"
     result.update(verification_errors=verr, compliance_blocks=blocks, compliance_warnings=warns)
 
@@ -233,6 +304,8 @@ def main(work, dry=False):
             (dest / f"{name}.md").write_text(doc, encoding="utf-8")
             shutil.copy(work / "post.json", dest / "post.json")
             shutil.copy(work / "body.md", dest / "body.md")
+            if (work / "images.json").exists():
+                shutil.copy(work / "images.json", dest / "images.json")
             (dest / "REVIEW.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         result["path"] = str(dest)
         print(json.dumps(result, ensure_ascii=False))
