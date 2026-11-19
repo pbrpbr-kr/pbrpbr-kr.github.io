@@ -1,8 +1,8 @@
 ---
 layout: "post"
-title: "바르는 PDRN 열풍, 데이터와 근거로 다시 보기"
+title: "연어 DNA는 어떻게 화장대에 올랐나"
 dek: "주사실에서 화장대로 걸어 나온 연어 DNA 성분, 그 인기는 어디까지 근거가 있을까"
-date: "2026-11-19 22:57:58 +0900"
+date: "2026-11-19 22:59:08 +0900"
 categories:
   - "성분"
   - "트렌드"
@@ -47,10 +47,10 @@ verification:
       verdict: "지지"
       notes: "비건 PDRN 확산과 바르는 PDRN 근거 한계에 대한 전문가 지적은 지지, 홈케어 이전 주장은 펩타이드 포함이 부정확하다며 부분 지지"
   status: "passed"
-  checked_at: "2026-11-19 22:57 KST"
+  checked_at: "2026-11-19 22:59 KST"
 compliance:
   status: "통과"
-  checked_at: "2026-11-19 22:57 KST"
+  checked_at: "2026-11-19 22:59 KST"
 sources:
   - title: "PubMed search: polydeoxyribonucleotide skin (연도별 건수)"
     url: "https://pubmed.ncbi.nlm.nih.gov/?term=polydeoxyribonucleotide+skin"
