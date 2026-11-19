@@ -95,7 +95,7 @@ def to_yaml(obj, indent=0):
 
 def check_schema(meta, body):
     errs = []
-    for k in ("title", "slug", "categories", "evidence_level", "evidence_summary", "claims", "sources", "verification"):
+    for k in ("title", "slug", "dek", "categories", "evidence_level", "evidence_summary", "trust_note", "claims", "sources", "verification"):
         if k not in meta:
             errs.append(f"필드 누락: {k}")
     if errs:
@@ -113,8 +113,17 @@ def check_schema(meta, body):
             errs.append(f"출처 {i}: type은 {sorted(SOURCE_TYPES)} 중 하나")
     if not meta["claims"]:
         errs.append("핵심 주장(claims)이 비어 있음")
-    if len(body.strip()) < 800:
-        errs.append("본문이 너무 짧음(800자 미만)")
+    if len(body.strip()) < 1500:
+        errs.append("본문이 너무 짧음(1,500자 미만)")
+    if re.search(r"\[\d+\]", body):
+        errs.append("본문에 [n] 출처 번호를 쓰지 않음(매거진 문체, 출처는 문장 속에 자연스럽게)")
+    tn = meta.get("trust_note", "")
+    if not (60 <= len(tn) <= 320):
+        errs.append("trust_note는 60~320자의 짧은 단락")
+    if re.search(r"검증자|교차\s*검증|교차\s*확인|Codex|codex|서브에이전트|지지\s*\d|부분 지지|evidence|verdict", tn):
+        errs.append("trust_note에 검증 절차·판정 용어를 쓰지 않음(독자 눈높이로 신뢰도만 서술)")
+    if not (10 <= len(meta.get("dek", "")) <= 90):
+        errs.append("dek(부제)은 10~90자 한 문장")
     return errs
 
 
@@ -163,7 +172,7 @@ def check_verification(meta):
 
 
 def check_compliance(meta, body):
-    text = "\n".join([meta["title"], meta["evidence_summary"], body] + [c.get("text", "") for c in meta["claims"]])
+    text = "\n".join([meta["title"], meta["dek"], meta["trust_note"], meta["evidence_summary"], body] + [c.get("text", "") for c in meta["claims"]])
     blocks, warns = [], []
     for pat, why in BLOCK:
         for m in re.finditer(pat, text, flags=re.I):
@@ -199,10 +208,12 @@ def main(work, dry=False):
     fm = {
         "layout": "post",
         "title": meta["title"],
+        "dek": meta["dek"],
         "date": now.strftime("%Y-%m-%d %H:%M:%S +0900"),
         "categories": meta["categories"],
         "evidence_level": meta["evidence_level"],
         "evidence_summary": meta["evidence_summary"],
+        "trust_note": meta["trust_note"],
         "claims": [{"text": c["text"], "evidence": c["evidence"], "verdict": c.get("verdict", "")} for c in meta["claims"]],
         "verification": meta["verification"],
         "compliance": meta["compliance"],

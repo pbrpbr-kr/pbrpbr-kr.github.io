@@ -48,3 +48,21 @@ th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: lef
 .muted { color: var(--muted); font-size: 14px; }
 .sources li { margin-bottom: 6px; overflow-wrap: anywhere; }
 .site-footer { border-top: 1px solid var(--line); padding: 24px 0 40px; }
+
+/* magazine */
+.site-footer .disclaimer { display: none; }
+.kicker { color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: .02em; margin-right: 10px; }
+.dek { font-size: 19px; line-height: 1.6; color: var(--muted); margin: -4px 0 28px; }
+.dek-small { color: var(--muted); margin: 4px 0 0; font-size: 15px; }
+.post .content p:first-of-type { font-size: 18.5px; }
+.post .content h2 { font-size: 22px; margin-top: 2.2em; }
+.post .content blockquote { margin: 1.6em 0; padding: 4px 0 4px 18px; border-left: 3px solid var(--accent); color: var(--muted); font-size: 18px; }
+.trust { margin-top: 48px; padding: 18px 20px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.trust h2 { font-size: 17px; margin: 0 0 6px; }
+.trust p { margin: 0; font-size: 16px; }
+.trust-objective { border-left: 4px solid var(--obj); }
+.trust-mixed { border-left: 4px solid var(--mix); }
+.trust-cross_verified_sns { border-left: 4px solid var(--sns); }
+details.sources { margin-top: 28px; border-top: 0; font-size: 14px; color: var(--muted); }
+details.sources summary { cursor: pointer; }
+.post .disclaimer { margin-top: 24px; font-size: 13px; }
