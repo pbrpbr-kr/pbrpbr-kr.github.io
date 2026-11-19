@@ -1,5 +1,4 @@
 # Pages CMS 관리자 화면 설정 (https://app.pagescms.org 에서 GitHub로 로그인)
-media: false
 content:
   - name: posts
     label: 글
